@@ -73,37 +73,41 @@ def serve_any_other_file(path):
 
 @app.route("/login", methods=["POST"])
 def login():
-    body= request.get_json(silent=True)
+    body = request.get_json(silent=True)
     if body is None:
-        return jsonify({"msg":"Debes enviar información"}), 400
+        return jsonify({"msg": "Debes enviar información"}), 400
     if "email" not in body or "password" not in body:
         return jsonify({"msg": "Debes enviar email y contraseña"}), 400
-    user= User.query.filter_by(email=body['email'])
-    if user in None:
-        return jsonify ({"msg":"Email o contraseña incorrecta"})
-    if user.password != body['password']
-         return jsonify ({"msg":"Email o contraseña incorrecta"})
-    access_token = create_access_token(identity=user.email)
-    return jsonify(access_token=access_token)
+    user = User.query.filter_by(email=body['email']).first()
+    if user is None:
+        return jsonify({"msg": "Email o contraseña incorrecta"}), 401
+    if user.password != body['password']:
+        return jsonify({"msg": "Email o contraseña incorrecta"}), 401
+    access_token = create_access_token(identity=user.id)
+    return jsonify(access_token=access_token), 200
 
 @app.route("/register", methods=["POST"])
 def register():
     body = request.get_json(silent=True)
-
     if body is None:
         return jsonify({"msg": "Debes enviar información"}), 400
-
     if "email" not in body or "password" not in body:
         return jsonify({"msg": "Debes enviar email y contraseña"}), 400
-
-    existing_user = User.query.filter_by(email=body["email"]).first()
+    if not isinstance(body.get("email"), str) or not isinstance(body.get("password"), str):
+     existing_user = User.query.filter_by(email=body["email"]).first()
     if existing_user:
         return jsonify({"msg": "Este email ya está en uso"}), 400
-
-    new_user = User(email=body["email"], password=hashed_password)
-
+    new_user = User(email=body["email"], password=body["password"], is_active=True)
     db.session.add(new_user)
     db.session.commit()
+    return jsonify({"msg": "Usuario registrado"}), 201
+
+@app.route("/private", methods=["GET"])
+@jwt_required()
+def private():
+    current_user = get_jwt_identity()
+    user = User.query.get(current_user)
+    return jsonify({'msg': "Bienvenido", 'id': user.id, 'email': user.email }), 200
 
 # this only runs if `$ python src/main.py` is executed
 if __name__ == '__main__':
