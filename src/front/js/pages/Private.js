@@ -1,0 +1,36 @@
+import React, { useEffect } from "react";
+import { useNavigate } from "react-router-dom";
+
+const Private = () => {
+    const navigate = useNavigate();
+
+    useEffect(() => {
+        const token = sessionStorage.getItem('token');
+
+        if (!token) {
+            navigate('/login');
+        }
+    }, [navigate]);
+
+    const signout = () => {
+        
+        sessionStorage.removeItem('token');
+        // Redirigir al usuario a la página de inicio de sesión
+        navigate('/login');
+    };
+
+    return (
+            <div className="container mt-5">
+                <div className="card">
+                    <div className="card-body">
+                        <h1 className="card-title">Sesión iniciada con éxito!</h1>
+                        <p className="card-text">¡Bienvenid@ a private!</p>
+						<p className="card-text">¡Hasta pronto, no olvides cerrar sesión!</p>
+                        <button className="btn btn-danger" onClick={signout}>Cerrar Sesión</button>
+                    </div>
+                </div>
+            </div>
+    );
+};
+
+export default Private;
