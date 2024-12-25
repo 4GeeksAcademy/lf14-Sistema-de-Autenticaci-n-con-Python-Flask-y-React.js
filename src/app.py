@@ -15,6 +15,7 @@ from flask_jwt_extended import create_access_token
 from flask_jwt_extended import get_jwt_identity
 from flask_jwt_extended import jwt_required
 from flask_jwt_extended import JWTManager
+from flask_cors import CORS
 # from models import Person
 
 ENV = "development" if os.getenv("FLASK_DEBUG") == "1" else "production"
@@ -22,6 +23,8 @@ static_file_dir = os.path.join(os.path.dirname(
     os.path.realpath(__file__)), '../public/')
 app = Flask(__name__)
 app.url_map.strict_slashes = False
+CORS(app)
+CORS(app, origins=['https://potential-palm-tree-75vgq6rvpxxhxjv4-3000.app.github.dev'])
 
 app.config["JWT_SECRET_KEY"] = os.getenv("JWT_SSKEY")
 jwt = JWTManager(app)
@@ -93,13 +96,18 @@ def register():
         return jsonify({"msg": "Debes enviar información"}), 400
     if "email" not in body or "password" not in body:
         return jsonify({"msg": "Debes enviar email y contraseña"}), 400
+
     if not isinstance(body.get("email"), str) or not isinstance(body.get("password"), str):
-     existing_user = User.query.filter_by(email=body["email"]).first()
+        return jsonify({"msg": "Email y contraseña deben ser cadenas de texto"}), 400 
+
+    existing_user = User.query.filter_by(email=body["email"]).first()
     if existing_user:
         return jsonify({"msg": "Este email ya está en uso"}), 400
+
     new_user = User(email=body["email"], password=body["password"], is_active=True)
     db.session.add(new_user)
     db.session.commit()
+
     return jsonify({"msg": "Usuario registrado"}), 201
 
 @app.route("/private", methods=["GET"])

@@ -16,7 +16,7 @@ const Private = () => {
         
         sessionStorage.removeItem('token');
         // Redirigir al usuario a la página de inicio de sesión
-        navigate('/login');
+        navigate('/');
     };
 
     return (
